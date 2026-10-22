@@ -3,21 +3,23 @@
 ## Current State
 
 - Updated: October 22, 2026.
-- Current task: None. Project tracking initialized; implementation has not started.
-- Most recently completed task: None. Documentation setup is not an implemented feature.
-- Verified repository state: minimal README and seven design documents; no application code, package manifests, Prisma schema/migrations, or test setup.
-- Unfinished work: T001–T016 are TODO. The stack is planned, not installed or verified.
-- Blockers: None for tracking setup. Implementation decisions and environment availability must be checked during the relevant tasks; see `PROJECT.md`.
-- Recommended next task: T001 — Application scaffold and development checks.
+- Current task: T001 — Application scaffold and development checks (DONE).
+- Most recently completed task: T001.
+- Verified: Full scaffold created under client/, server/, prisma/. All development checks pass: npm install, prisma generate, prisma migrate dev, server typecheck, client typecheck, ESLint, server tests (1/1), client tests (1/1), Vite production build, server tsc build, Prisma runtime smoke test (SELECT 1 OK).
+- Unfinished work: T002–T016 are TODO.
+- Blockers: None.
+- Recommended next task: T002 — Database model and backend infrastructure.
 
 ## Recent Notes
 
-### October 22, 2026 — Project tracking initialized
+### October 22, 2026 — T001 complete
 
-- Request: Adopt the Cline project-management rules for this repository.
-- Inspected the README, all seven existing documents in `docs/`, the repository file listing, and Git status.
-- Added `PROJECT.md`, `TASKS.md`, and `PROGRESS.md` at the repository root. Preserved the existing documents and their six-phase sequence.
-- Recorded 16 implementation deliverables with stable IDs, dependencies, expected results, and practical completion checks. No implementation task was started.
-- Existing `docs/` files were untracked at inspection time and were left unchanged. No commit, push, or deployment was performed.
-- Verification: Reviewed all tracking files against the source documents. Automated checks cover 16 sequential TODO task IDs, required fields, dependency ordering, source-document references, and whitespace. Git diff whitespace check passed. Application tests/builds are not available because application code and tooling do not yet exist.
-- Handoff: Start T001 on the next implementation request. Read the tracking files, inspect the relevant repository state, mark T001 IN PROGRESS, implement and verify it, then update task status and these notes. Stop after that deliverable.
+- Created root package.json (npm workspaces), tsconfig.json, .gitignore, .env, .env.example, .prettierrc, eslint.config.js, prisma/config.ts, prisma/schema.prisma.
+- Created server/ with package.json, tsconfig.json, vitest.config.ts, src/index.ts, src/app.ts, src/db.ts, src/env.ts, src/health.test.ts.
+- Created client/ with package.json, tsconfig.json, vite.config.ts, index.html, src/main.tsx, src/App.tsx, src/App.test.tsx, src/test/setup.ts.
+- Stack: Prisma 7.10.1 (ESM output, prisma.config.ts required), TypeScript 6.0.3 (newest compatible with typescript-eslint 8.72.0), Vite 8.3.5, React 19.3.1, Tailwind 4.3.3, Express 5.3.0, Zod 4.6.7, Vitest 5.0.5, ESLint 10.13.0.
+- Prisma schema: 20 models (School, Subscription, AcademicYear, Term, Class, Student, Guardian, Teacher, Subject, User, Enrollment, Fee, Invoice, Payment, Attendance, Examination, Grade, Announcement, AuditLog) with full relation opposites.
+- PostgreSQL database `student_mng_dev` created and migration `20261022140237_init` applied.
+- All checks verified: typecheck (server+client), lint (ESLint root config), tests (server 1/1, client 1/1), builds (Vite client + tsc server), Prisma smoke test.
+
+

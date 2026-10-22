@@ -1,0 +1,48 @@
+{
+  "name": "student-mng",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Myanmar-first multi-tenant school management system",
+  "scripts": {
+    "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "cd server && tsx watch src/index.ts",
+    "dev:client": "cd client && vite",
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "cd server && tsc --noEmit && tsc -p tsconfig.json",
+    "build:client": "cd client && vite build",
+    "typecheck": "npm run typecheck:server && npm run typecheck:client",
+    "typecheck:server": "cd server && tsc --noEmit -p tsconfig.json",
+    "typecheck:client": "cd client && tsc --noEmit -p tsconfig.json",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
+    "lint:server": "cd server && eslint . --ext .ts --max-warnings 0",
+    "lint:client": "cd client && eslint . --ext .ts,.tsx --max-warnings 0",
+    "test": "vitest run",
+    "test:server": "cd server && vitest run",
+    "test:client": "cd client && vitest run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "workspaces": ["client", "server"],
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@prisma/client": "^7.10.1",
+    "concurrently": "^10.0.6",
+    "dotenv": "^18.0.8",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "prisma": "^7.10.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "npm@11.19.0"
+}

@@ -5,7 +5,7 @@ All implementation tasks are TODO. The order follows `docs/IMPLEMENTATION_PLAN.m
 ## Phase 1: Foundation
 
 ### T001 — Application scaffold and development checks
-- Status: TODO
+- Status: DONE
 - Dependencies: None
 - Expected result: Separate client and server TypeScript applications using the planned stack, root Prisma layout, safe environment examples, documented local commands, and working build/typecheck/test scripts. Establish a basic responsive UI shell and API health check.
 - Completion check: From a clean dependency install, run the documented builds, typechecks, and smoke tests; verify the client shell and API health response. Record actual commands and results.
