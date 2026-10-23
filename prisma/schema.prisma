@@ -10,13 +10,13 @@ datasource db {
 }
 
 model School {
-  id          String   @id @default(uuid())
-  name        String
-  code        String   @unique
-  address     String?
-  phone       String?
-  email       String?
-  website     String?
+  id            String         @id @default(uuid())
+  name          String
+  code          String         @unique
+  address       String?
+  phone         String?
+  email         String?
+  website       String?
   subscription  Subscription?
   users         User[]
   students      Student[]
@@ -33,264 +33,265 @@ model School {
   academicYears AcademicYear[]
   announcements Announcement[]
   auditLogs     AuditLog[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  sessions      Session[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@map("schools")
 }
 
 model Subscription {
-  id          String   @id @default(uuid())
-  schoolId    String   @unique
-  school      School   @relation(fields: [schoolId], references: [id])
-  plan        String   @default("basic")
-  status      String   @default("active")
-  startsAt    DateTime @default(now())
-  endsAt      DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String    @id @default(uuid())
+  schoolId  String    @unique
+  school    School    @relation(fields: [schoolId], references: [id])
+  plan      String    @default("basic")
+  status    String    @default("active")
+  startsAt  DateTime  @default(now())
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@map("subscriptions")
 }
 
 model AcademicYear {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
+  school      School       @relation(fields: [schoolId], references: [id])
   name        String
   startDate   DateTime
   endDate     DateTime
-  isCurrent   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isCurrent   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   terms       Term[]
   classes     Class[]
   enrollments Enrollment[]
   fees        Fee[]
 
-  @@map("academic_years")
   @@index([schoolId])
+  @@map("academic_years")
 }
 
 model Term {
-  id            String   @id @default(uuid())
+  id             String       @id @default(uuid())
   academicYearId String
-  academicYear  AcademicYear @relation(fields: [academicYearId], references: [id])
-  name          String
-  startDate     DateTime
-  endDate       DateTime
-  isCurrent     Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  name           String
+  startDate      DateTime
+  endDate        DateTime
+  isCurrent      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  @@map("terms")
   @@index([academicYearId])
+  @@map("terms")
 }
 
 model Class {
-  id            String   @id @default(uuid())
-  schoolId      String
-  school        School   @relation(fields: [schoolId], references: [id])
+  id             String        @id @default(uuid())
+  schoolId       String
+  school         School        @relation(fields: [schoolId], references: [id])
   academicYearId String
-  academicYear  AcademicYear @relation(fields: [academicYearId], references: [id])
-  name          String
-  gradeLevel    Int
-  section       String   @default("A")
-  capacity      Int      @default(30)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  students      Student[]
-  subjects      Subject[]
-  teachers      Teacher[]
-  enrollments   Enrollment[]
-  fees          Fee[]
-  attendances   Attendance[]
-  examinations  Examination[]
+  academicYear   AcademicYear  @relation(fields: [academicYearId], references: [id])
+  name           String
+  gradeLevel     Int
+  section        String        @default("A")
+  capacity       Int           @default(30)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  students       Student[]
+  subjects       Subject[]
+  teachers       Teacher[]
+  enrollments    Enrollment[]
+  fees           Fee[]
+  attendances    Attendance[]
+  examinations   Examination[]
 
-  @@map("classes")
   @@index([schoolId])
   @@index([academicYearId])
+  @@map("classes")
 }
 
 model Student {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
-  studentId   String   @unique
+  school      School       @relation(fields: [schoolId], references: [id])
+  studentId   String       @unique
   firstName   String
   lastName    String
   dateOfBirth DateTime?
   gender      String?
-  email       String?  @unique
+  email       String?      @unique
   phone       String?
   address     String?
   classId     String?
-  class       Class?   @relation(fields: [classId], references: [id])
+  class       Class?       @relation(fields: [classId], references: [id])
   guardians   Guardian[]
   enrollments Enrollment[]
   invoices    Invoice[]
   attendances Attendance[]
   grades      Grade[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  @@map("students")
   @@index([schoolId])
   @@index([classId])
+  @@map("students")
 }
 
 model Guardian {
-  id          String   @id @default(uuid())
-  schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
-  firstName   String
-  lastName    String
-  email       String?  @unique
-  phone       String?
-  address     String?
-  relationship String   @default("parent")
-  students    Student[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String    @id @default(uuid())
+  schoolId     String
+  school       School    @relation(fields: [schoolId], references: [id])
+  firstName    String
+  lastName     String
+  email        String?   @unique
+  phone        String?
+  address      String?
+  relationship String    @default("parent")
+  students     Student[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  @@map("guardians")
   @@index([schoolId])
+  @@map("guardians")
 }
 
 model Teacher {
-  id          String   @id @default(uuid())
-  schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
-  employeeId  String   @unique
-  firstName   String
-  lastName    String
-  email       String?  @unique
-  phone       String?
-  subjects    Subject[]
-  classes     Class[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(uuid())
+  schoolId   String
+  school     School    @relation(fields: [schoolId], references: [id])
+  employeeId String    @unique
+  firstName  String
+  lastName   String
+  email      String?   @unique
+  phone      String?
+  subjects   Subject[]
+  classes    Class[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  @@map("teachers")
   @@index([schoolId])
+  @@map("teachers")
 }
 
 model Fee {
-  id          String   @id @default(uuid())
-  schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
-  name        String
-  amount      Decimal  @db.Decimal(12, 2)
+  id             String       @id @default(uuid())
+  schoolId       String
+  school         School       @relation(fields: [schoolId], references: [id])
+  name           String
+  amount         Decimal      @db.Decimal(12, 2)
   academicYearId String
-  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
-  classId     String?
-  class       Class?   @relation(fields: [classId], references: [id])
-  invoices    Invoice[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  classId        String?
+  class          Class?       @relation(fields: [classId], references: [id])
+  invoices       Invoice[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  @@map("fees")
   @@index([schoolId])
   @@index([academicYearId])
+  @@map("fees")
 }
 
 model Invoice {
-  id          String   @id @default(uuid())
-  schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
-  studentId   String
-  student     Student  @relation(fields: [studentId], references: [id])
-  feeId       String
-  fee         Fee      @relation(fields: [feeId], references: [id])
-  payments    Payment[]
-  amount      Decimal  @db.Decimal(12, 2)
-  status      String   @default("unpaid")
-  dueDate     DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String    @id @default(uuid())
+  schoolId  String
+  school    School    @relation(fields: [schoolId], references: [id])
+  studentId String
+  student   Student   @relation(fields: [studentId], references: [id])
+  feeId     String
+  fee       Fee       @relation(fields: [feeId], references: [id])
+  payments  Payment[]
+  amount    Decimal   @db.Decimal(12, 2)
+  status    String    @default("unpaid")
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  @@map("invoices")
   @@index([schoolId])
   @@index([studentId])
+  @@map("invoices")
 }
 
 model Payment {
-  id          String   @id @default(uuid())
-  schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
-  amount      Decimal  @db.Decimal(12, 2)
-  method      String   @default("cash")
-  reference   String?
-  recordedAt  DateTime @default(now())
+  id           String   @id @default(uuid())
+  schoolId     String
+  school       School   @relation(fields: [schoolId], references: [id])
+  invoiceId    String
+  invoice      Invoice  @relation(fields: [invoiceId], references: [id])
+  amount       Decimal  @db.Decimal(12, 2)
+  method       String   @default("cash")
+  reference    String?
+  recordedAt   DateTime @default(now())
   recordedById String
-  recordedBy  User     @relation(fields: [recordedById], references: [id])
+  recordedBy   User     @relation(fields: [recordedById], references: [id])
 
-  @@map("payments")
   @@index([schoolId])
   @@index([invoiceId])
+  @@map("payments")
 }
 
 model Attendance {
-  id          String   @id @default(uuid())
-  schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
-  studentId   String
-  student     Student  @relation(fields: [studentId], references: [id])
-  classId     String
-  class       Class    @relation(fields: [classId], references: [id])
-  date        DateTime @default(now())
-  status      String   @default("present")
-  markedById  String
-  markedBy    User     @relation(fields: [markedById], references: [id])
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  schoolId   String
+  school     School   @relation(fields: [schoolId], references: [id])
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id])
+  classId    String
+  class      Class    @relation(fields: [classId], references: [id])
+  date       DateTime @default(now())
+  status     String   @default("present")
+  markedById String
+  markedBy   User     @relation(fields: [markedById], references: [id])
+  createdAt  DateTime @default(now())
 
-  @@map("attendance")
+  @@unique([studentId, classId, date])
   @@index([schoolId])
   @@index([studentId])
   @@index([classId])
-  @@unique([studentId, classId, date])
+  @@map("attendance")
 }
 
 model Examination {
-  id          String   @id @default(uuid())
-  schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
-  classId     String
-  class       Class    @relation(fields: [classId], references: [id])
-  subjectId   String
-  subject     Subject  @relation(fields: [subjectId], references: [id])
-  title       String
-  date        DateTime
-  maxScore    Decimal  @db.Decimal(6, 2)
-  grades      Grade[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id])
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  title     String
+  date      DateTime
+  maxScore  Decimal  @db.Decimal(6, 2)
+  grades    Grade[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("examinations")
   @@index([schoolId])
   @@index([classId])
   @@index([subjectId])
+  @@map("examinations")
 }
 
 model Grade {
-  id          String   @id @default(uuid())
-  schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
+  id            String      @id @default(uuid())
+  schoolId      String
+  school        School      @relation(fields: [schoolId], references: [id])
   examinationId String
-  examination Examination @relation(fields: [examinationId], references: [id])
-  studentId   String
-  student     Student  @relation(fields: [studentId], references: [id])
-  score       Decimal  @db.Decimal(6, 2)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  examination   Examination @relation(fields: [examinationId], references: [id])
+  studentId     String
+  student       Student     @relation(fields: [studentId], references: [id])
+  score         Decimal     @db.Decimal(6, 2)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
-  @@map("grades")
+  @@unique([examinationId, studentId])
   @@index([schoolId])
   @@index([examinationId])
   @@index([studentId])
-  @@unique([examinationId, studentId])
+  @@map("grades")
 }
 
 model Announcement {
@@ -305,81 +306,98 @@ model Announcement {
   createdBy   User     @relation(fields: [createdById], references: [id])
   createdAt   DateTime @default(now())
 
-  @@map("announcements")
   @@index([schoolId])
+  @@map("announcements")
 }
 
 model AuditLog {
-  id          String   @id @default(uuid())
-  schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
-  action      String
-  entity      String
-  entityId    String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
 
-  @@map("audit_logs")
   @@index([schoolId])
   @@index([userId])
+  @@map("audit_logs")
 }
 
 model Subject {
-  id          String   @id @default(uuid())
-  schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
-  classId     String
-  class       Class    @relation(fields: [classId], references: [id])
-  teacherId   String?
-  teacher     Teacher? @relation(fields: [teacherId], references: [id])
-  name        String
-  code        String
+  id           String        @id @default(uuid())
+  schoolId     String
+  school       School        @relation(fields: [schoolId], references: [id])
+  classId      String
+  class        Class         @relation(fields: [classId], references: [id])
+  teacherId    String?
+  teacher      Teacher?      @relation(fields: [teacherId], references: [id])
+  name         String
+  code         String
   examinations Examination[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  @@map("subjects")
   @@index([schoolId])
   @@index([classId])
+  @@map("subjects")
 }
 
 model User {
-  id          String   @id @default(uuid())
-  schoolId    String
-  school      School   @relation(fields: [schoolId], references: [id])
-  email       String   @unique
-  passwordHash String
-  role        String   @default("teacher")
-  firstName   String
-  lastName    String
-  isActive    Boolean  @default(true)
-  payments    Payment[]
-  attendances Attendance[]
+  id            String         @id @default(uuid())
+  schoolId      String
+  school        School         @relation(fields: [schoolId], references: [id])
+  email         String         @unique
+  passwordHash  String
+  role          String         @default("teacher")
+  firstName     String
+  lastName      String
+  isActive      Boolean        @default(true)
+  payments      Payment[]
+  attendances   Attendance[]
   announcements Announcement[]
-  auditLogs   AuditLog[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  auditLogs     AuditLog[]
+  sessions      Session[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  @@map("users")
   @@index([schoolId])
+  @@map("users")
 }
 
 model Enrollment {
-  id            String   @id @default(uuid())
-  studentId     String
-  student       Student  @relation(fields: [studentId], references: [id])
-  classId       String
-  class         Class    @relation(fields: [classId], references: [id])
+  id             String       @id @default(uuid())
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id])
+  classId        String
+  class          Class        @relation(fields: [classId], references: [id])
   academicYearId String
-  academicYear  AcademicYear @relation(fields: [academicYearId], references: [id])
-  enrolledAt    DateTime @default(now())
-  isActive      Boolean  @default(true)
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  enrolledAt     DateTime     @default(now())
+  isActive       Boolean      @default(true)
 
-  @@map("enrollments")
+  @@unique([studentId, classId, academicYearId])
   @@index([studentId])
   @@index([classId])
   @@index([academicYearId])
-  @@unique([studentId, classId, academicYearId])
+  @@map("enrollments")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
 }

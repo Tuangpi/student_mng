@@ -1,10 +1,8 @@
-import "dotenv/config";
 import { createServer } from "./app.js";
-
-const PORT = Number(process.env.PORT) || 4000;
+import { config } from "./env.js";
 
 createServer().then((app) => {
-  app.listen(PORT, () => {
-    console.log(`Server listening on http://localhost:${PORT}`);
+  app.listen(config.PORT, () => {
+    console.log(`Server listening on http://localhost:${config.PORT}`);
   });
 });

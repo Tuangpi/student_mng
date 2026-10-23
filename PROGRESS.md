@@ -2,13 +2,13 @@
 
 ## Current State
 
-- Updated: October 22, 2026.
-- Current task: T001 — Application scaffold and development checks (DONE).
-- Most recently completed task: T001.
-- Verified: Full scaffold created under client/, server/, prisma/. All development checks pass: npm install, prisma generate, prisma migrate dev, server typecheck, client typecheck, ESLint, server tests (1/1), client tests (1/1), Vite production build, server tsc build, Prisma runtime smoke test (SELECT 1 OK).
-- Unfinished work: T002–T016 are TODO.
+- Updated: October 23, 2026.
+- Current task: T002 — Database model and backend infrastructure (DONE).
+- Most recently completed task: T002.
+- Verified (T002): Prisma schema + `Session` model; migration `20261023043215_add_session_model` applied and migrations apply cleanly to an empty DB; env fail-fast validation, secret-redacting logger, `AppError` + error middleware (no client secret leak), Zod request validation wired into `app.ts`/`index.ts`; 11 server tests pass (env 2, error 3, schema constraints 5, health 1); server+client typecheck, lint, tests, and full production build all pass.
+- Unfinished work: T003–T016 are TODO.
 - Blockers: None.
-- Recommended next task: T002 — Database model and backend infrastructure.
+- Recommended next task: T003 — Authentication, role permissions, and tenant isolation.
 
 ## Recent Notes
 

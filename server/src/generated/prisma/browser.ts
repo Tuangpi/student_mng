@@ -112,3 +112,8 @@ export type User = Prisma.UserModel
  * 
  */
 export type Enrollment = Prisma.EnrollmentModel
+/**
+ * Model Session
+ * 
+ */
+export type Session = Prisma.SessionModel

@@ -11,10 +11,11 @@ All implementation tasks are TODO. The order follows `docs/IMPLEMENTATION_PLAN.m
 - Completion check: From a clean dependency install, run the documented builds, typechecks, and smoke tests; verify the client shell and API health response. Record actual commands and results.
 
 ### T002 — Database model and backend infrastructure
-- Status: TODO
+- Status: DONE
 - Dependencies: T001
 - Expected result: Reviewed core entity relationships and tenant constraints; initial Prisma schema and PostgreSQL migrations; environment validation, consistent errors, request validation, and safe logging. Resolve authentication-related schema decisions needed by T003.
 - Completion check: Apply migrations to an empty development/test database; validate the schema and test key foreign-key, uniqueness, tenant-relationship, and decimal-money constraints. Test invalid configuration and API error handling without leaking secrets.
+- Evidence (2026-10-23): Added `Session` model + migration `20261023043215_add_session_model` (session-based auth using existing `SESSION_SECRET`/`passwordHash`). Migrations apply cleanly to an empty `student_mng_test` DB. Added `env.ts` (fail-fast validation of `DATABASE_URL`/`SESSION_SECRET`), `logger.ts` (secret redaction), `error.ts` (`AppError` + error middleware that hides unexpected errors from clients), `middleware/validate.ts` (Zod request validation); wired into `app.ts`/`index.ts`. Tests: env 2, error 3, schema/constraints 5, health 1 = 11 passed. Server typecheck, lint, tests, client typecheck/tests/lint, and full production build all pass.
 
 ### T003 — Authentication, role permissions, and tenant isolation
 - Status: TODO

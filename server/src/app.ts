@@ -1,20 +1,28 @@
 import cors from "cors";
-import dotenv from "dotenv";
 import express, { type Express } from "express";
 import helmet from "helmet";
-
-dotenv.config();
+import { config } from "./env.js";
+import { errorMiddleware } from "./error.js";
+import { logger } from "./logger.js";
 
 export async function createServer(): Promise<Express> {
   const app = express();
 
   app.use(helmet());
-  app.use(cors({ origin: process.env.CLIENT_URL ?? "*" }));
+  app.use(cors({ origin: config.CLIENT_URL }));
   app.use(express.json());
 
   app.get("/health", (_req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
+
+  app.use((_req, res) => {
+    res.status(404).json({ error: "Not found" });
+  });
+
+  app.use(errorMiddleware);
+
+  logger.info("Server initialized", { port: config.PORT, env: config.NODE_ENV });
 
   return app;
 }
