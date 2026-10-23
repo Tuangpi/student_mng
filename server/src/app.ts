@@ -4,13 +4,16 @@ import helmet from "helmet";
 import { config } from "./env.js";
 import { errorMiddleware } from "./error.js";
 import { logger } from "./logger.js";
+import authRoutes from "./auth/routes.js";
 
-export async function createServer(): Promise<Express> {
+export function createServer(): Express {
   const app = express();
 
   app.use(helmet());
   app.use(cors({ origin: config.CLIENT_URL }));
   app.use(express.json());
+
+  app.use("/api", authRoutes);
 
   app.get("/health", (_req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });

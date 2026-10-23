@@ -15,14 +15,14 @@ student-management/
 │       ├── lib/
 │       └── types/
 ├── server/
+│   ├── prisma/
+│   │   └── schema.prisma
 │   └── src/
 │       ├── modules/
 │       ├── middleware/
 │       ├── common/
 │       ├── config/
 │       └── app.ts
-├── prisma/
-│   └── schema.prisma
 ├── docs/
 └── README.md
 ```

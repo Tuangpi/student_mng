@@ -6,8 +6,9 @@ async function createSchool(code: string) {
 }
 
 async function cleanup(schoolId: string) {
-  await prisma.user.deleteMany({ where: { schoolId } });
-  await prisma.school.delete({ where: { id: schoolId } });
+  await prisma.auditLog.deleteMany({ where: { schoolId } }).catch(() => {});
+  await prisma.user.deleteMany({ where: { schoolId } }).catch(() => {});
+  await prisma.school.delete({ where: { id: schoolId } }).catch(() => {});
 }
 
 describe("database constraints", () => {

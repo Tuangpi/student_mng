@@ -25,7 +25,7 @@ This file captures project-level decisions. `TASKS.md` is the authoritative task
 - Backend: Node.js, Express, TypeScript, REST API, Zod validation.
 - Database: PostgreSQL with Prisma and versioned migrations.
 - Testing: Vitest and Supertest.
-- Architecture: modular monolith; separate `client/` and `server/` directories in one repository, with a root `prisma/` directory.
+- Architecture: modular monolith; separate `client/` and `server/` directories in one repository, with Prisma schema and migrations under `server/prisma/`.
 - Separate HTTP handling, business logic, validation, and data access where useful.
 
 These technologies are planned, not installed or verified. Select stable, compatible package versions during implementation; no versions are currently pinned.

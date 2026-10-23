@@ -13,7 +13,8 @@ server/dist/
 .env.*.local
 
 # Prisma
-prisma/migrations/
+server/prisma/migrations/
+server/src/generated/
 
 # IDE
 .idea/

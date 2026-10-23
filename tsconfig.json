@@ -13,6 +13,6 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": ["prisma.config.ts", "client/src/**/*.ts", "client/src/**/*.tsx", "server/src/**/*.ts"],
+  "include": ["server/prisma.config.ts", "client/src/**/*.ts", "client/src/**/*.tsx", "server/src/**/*.ts"],
   "exclude": ["node_modules", "dist", "client/dist", "server/dist"]
 }

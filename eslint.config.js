@@ -12,6 +12,6 @@ export default tseslint.config(
   },
   prettier,
   {
-    ignores: ["node_modules/", "dist/", "client/dist/", "server/dist/", "prisma/migrations/"],
+    ignores: ["node_modules/", "dist/", "client/dist/", "server/dist/", "server/prisma/migrations/", "server/src/generated/"],
   }
 );
