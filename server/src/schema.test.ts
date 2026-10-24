@@ -9,6 +9,13 @@ async function cleanup(schoolId: string) {
   await prisma.auditLog.deleteMany({ where: { schoolId } }).catch(() => {});
   await prisma.user.deleteMany({ where: { schoolId } }).catch(() => {});
   await prisma.school.delete({ where: { id: schoolId } }).catch(() => {});
+  await prisma.academicYear.deleteMany({ where: { schoolId } }).catch(() => {});
+  await prisma.term.deleteMany({ where: { academicYear: { schoolId } } }).catch(() => {});
+  await prisma.class.deleteMany({ where: { schoolId } }).catch(() => {});
+  await prisma.subject.deleteMany({ where: { schoolId } }).catch(() => {});
+  await prisma.guardian.deleteMany({ where: { schoolId } }).catch(() => {});
+  await prisma.teacher.deleteMany({ where: { schoolId } }).catch(() => {});
+  await prisma.student.deleteMany({ where: { schoolId } }).catch(() => {});
 }
 
 describe("database constraints", () => {

@@ -1,6 +1,6 @@
 import { config } from "./env.js";
 import { randomBytes } from "node:crypto";
-import { SESSION_TTL_MS } from "./session.js";
+import { SESSION_TTL_MS } from "./auth/session.js";
 import type { NextFunction, Request, Response } from "express";
 import { AppError } from "./error.js";
 

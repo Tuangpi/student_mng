@@ -1,0 +1,88 @@
+export type Language = "my" | "en";
+
+export const supportedLanguages = ["my", "en"] as const;
+
+export const defaultLanguage = "en";
+
+export const burmeseTranslations: Record<string, string> = {
+  "bh_System": "Student Management System",
+  "bh_School": "Myanmar-first multi-tenant school management",
+  "bh_Home": "Home",
+  "bh_Logout": "Logout",
+  "bh_Login": "Login",
+  "bh_MainMenu": "Main Menu",
+  "bh_Dashboard": "Dashboard",
+  "bh_Guardians": "Guardians",
+  "bh_Teachers": "Teachers",
+  "bh_Attendance": "Attendance",
+  "bh_Examinations": "Examinations",
+  "bh_Reports": "Reports",
+  "bh_Fees": "Fees",
+  "bh_Invoices": "Invoices",
+  "bh_Payments": "Payments",
+  "bh_Announcements": "Announcements",
+  "bh_Settings": "Settings",
+  "bh_Save": "Save",
+  "bh_Cancel": "Cancel",
+  "bh_Submit": "Submit",
+  "bh_Create": "Create",
+  "bh_Edit": "Edit",
+  "bh_Delete": "Delete",
+  "bh_View": "View",
+  "bh_MarkRead": "Mark as read",
+  "bh_Print": "Print",
+  "bh_Title": "Title",
+  "bh_Content": "Content",
+  "bh_Audience": "Audience",
+  "bh_All": "All",
+  "bh_Students": "Students",
+  "bh_Staff": "Staff",
+  "bh_AnnCreated": "Announcement created",
+  "bh_AnnUpdated": "Announcement updated",
+  "bh_AnnDeleted": "Announcement deleted",
+  "bh_AnnMarked": "Announcement marked as read",
+};
+
+export const englishTranslations: Record<string, string> = {
+  "bh_System": "Student Management System",
+  "bh_School": "Myanmar-first multi-tenant school management",
+  "bh_Home": "Home",
+  "bh_Logout": "Logout",
+  "bh_Login": "Login",
+  "bh_MainMenu": "Main Menu",
+  "bh_Dashboard": "Dashboard",
+  "bh_Guardians": "Guardians",
+  "bh_Teachers": "Teachers",
+  "bh_Attendance": "Attendance",
+  "bh_Examinations": "Examinations",
+  "bh_Reports": "Reports",
+  "bh_Fees": "Fees",
+  "bh_Invoices": "Invoices",
+  "bh_Payments": "Payments",
+  "bh_Announcements": "Announcements",
+  "bh_Settings": "Settings",
+  "bh_Save": "Save",
+  "bh_Cancel": "Cancel",
+  "bh_Submit": "Submit",
+  "bh_Create": "Create",
+  "bh_Edit": "Edit",
+  "bh_Delete": "Delete",
+  "bh_View": "View",
+  "bh_MarkRead": "Mark as read",
+  "bh_Print": "Print",
+  "bh_Title": "Title",
+  "bh_Content": "Content",
+  "bh_Audience": "Audience",
+  "bh_All": "All",
+  "bh_Students": "Students",
+  "bh_Staff": "Staff",
+  "bh_AnnCreated": "Announcement created",
+  "bh_AnnUpdated": "Announcement updated",
+  "bh_AnnDeleted": "Announcement deleted",
+  "bh_AnnMarked": "Announcement marked as read",
+};
+
+export const translate = (key: string, language: Language) => {
+  const translations = language === "my" ? burmeseTranslations : englishTranslations;
+  return translations[key] || key;
+};

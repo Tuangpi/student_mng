@@ -15,6 +15,7 @@ import {
 } from "../csrf.js";
 import { requireRole, requireSameSchool } from "../middleware/rbac.js";
 import { signIn, signOut, getCurrentUser } from "./service.js";
+import { createAnnouncement, listAnnouncements, getAnnouncement, markAnnouncementRead, getUnreadAnnouncementCount } from "../announcement.service.js";
 
 const router = Router();
 
@@ -636,5 +637,51 @@ router.get(
 );
 
 
+
+const announcementSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  content: z.string().trim().min(1).max(20000),
+  audience: z.enum(["all", "parents", "students", "staff"]).default("all"),
+}).strict();
+const audienceFilterSchema = z.object({
+  audience: z.enum(["all", "parents", "students", "staff"]).optional(),
+}).strict();
+
+router.post("/announcements", requireAuth, requireCsrf,
+  requireRole("super-admin", "school-admin", "principal"),
+  validateRequest(announcementSchema), async (req, res, next) => {
+    try {
+      const body = announcementSchema.parse(req.body);
+      const user = req.user!;
+      const announcement = await createAnnouncement(user.schoolId, body.title, body.content, body.audience, user.userId);
+      res.status(201).json({ announcement });
+    } catch (err) { next(err); }
+  });
+
+router.get("/announcements", requireAuth, async (req, res, next) => {
+  try {
+    const filter = audienceFilterSchema.safeParse(req.query);
+    if (!filter.success) throw new AppError("Invalid audience filter", 400);
+    res.json({ announcements: await listAnnouncements(req.user!, filter.data.audience) });
+  } catch (err) { next(err); }
+});
+
+router.get("/announcements/unread-count", requireAuth, async (req, res, next) => {
+  try {
+    res.json({ count: await getUnreadAnnouncementCount(req.user!) });
+  } catch (err) { next(err); }
+});
+
+router.get("/announcements/:id", requireAuth, async (req, res, next) => {
+  try {
+    res.json({ announcement: await getAnnouncement(String(req.params.id), req.user!) });
+  } catch (err) { next(err); }
+});
+
+router.post("/announcements/:id/read", requireAuth, requireCsrf, async (req, res, next) => {
+  try {
+    res.json(await markAnnouncementRead(String(req.params.id), req.user!));
+  } catch (err) { next(err); }
+});
 
 export default router;

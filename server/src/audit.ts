@@ -1,4 +1,6 @@
-import { prisma } from "./db.js";
+import { prisma } from './db.js';
+
+import type { Prisma } from './generated/prisma/client.js';
 
 export interface AuditInput {
   schoolId: string;
@@ -6,7 +8,7 @@ export interface AuditInput {
   action: string;
   entity: string;
   entityId?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Prisma.InputJsonObject;
 }
 
 export async function createAuditLog(input: AuditInput): Promise<void> {
@@ -17,7 +19,7 @@ export async function createAuditLog(input: AuditInput): Promise<void> {
       action: input.action,
       entity: input.entity,
       entityId: input.entityId ?? null,
-      metadata: input.metadata ?? null,
+      metadata: input.metadata,
     },
   });
 }

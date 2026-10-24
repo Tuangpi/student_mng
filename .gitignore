@@ -13,7 +13,8 @@ server/dist/
 .env.*.local
 
 # Prisma
-server/prisma/migrations/
+server/prisma/migrations/*
+!server/prisma/migrations/20261024130000_announcement_reads/
 server/src/generated/
 
 # IDE

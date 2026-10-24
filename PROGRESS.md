@@ -2,8 +2,17 @@
 
 ## Current State
 
-- Updated: October 23, 2026.
-Done: T011 — Manual payments, balances, and financial reports is complete. The implementation was already in place from T010 (Fee and invoice workflows) and verified against all T011 completion criteria:
+- Updated: October 24, 2026 — T013 backend verification complete.
+- Current task: None. Most recently completed: T013 — Announcements and notifications.
+- Delivery scope: authenticated in-app API feed; global plus recipient-role audience, explicit CSRF-protected POST read receipts, first-read timestamp preservation, and scoped unread counts. No external messaging or frontend notification UI.
+- Verified: 15/15 announcement tests pass twice; server typecheck/build, focused lint, Prisma validate, migration deployment and no-drift check pass.
+- Unfinished: full server regression has 3 failures, 27 passes, 18 skipped due to auth/schema fixture conflicts and an undefined CSRF test header. T014–T016 claims were not reverified during this task.
+- Recommended next work: regression test fixture isolation and CSRF cookie test repair; review downstream completion claims before release.
+
+## Earlier State (retained for context)
+
+- Updated: October 24, 2026.
+- Done: T011 — Manual payments, balances, and financial reports is complete. The implementation was already in place from T010 (Fee and invoice workflows) and verified against all T011 completion criteria:
 
 - **Payment creation** `POST /invoices/:invoiceId/payments` with method, reference, amount, and recordedBy user ✅
 - **Overpayment validation** — payment amount cannot exceed outstanding balance ✅
@@ -16,7 +25,7 @@ Done: T011 — Manual payments, balances, and financial reports is complete. The
 
 Tested: Full test suite runs with same results as before (21 passed, 12 pre-existing failures unrelated to T011 — CSRF token issue in audit logging test and test state contamination).
 
-Done: T012 — Parent and student portals routes implemented in server/src/auth/routes.ts. Routes include:
+- Done: T012 — Parent and student portals routes implemented in server/src/auth/routes.ts. Routes include:
 - GET /guardians/:guardianId/students - List students linked to a guardian (parent role, school isolation)
 - GET /students/me - Show authenticated student's own data (student role)
 - GET /students/:studentId - Show student data with role-based filtering (parent linked or own data)
@@ -45,14 +54,22 @@ Automated tests cover: valid/invalid authentication, lifecycle expiry/revocation
 
 ## Recent Notes
 
+### October 24, 2026 — T013 audience isolation and read tracking repaired
+
+- Restored announcement list/detail/publishing/read/count routes in `server/src/auth/routes.ts` using the actual service path and standard `.js` imports. No custom Vitest resolution is necessary.
+- `server/src/announcement.service.ts` derives audience visibility from the authenticated role and school; query filters cannot broaden it. Detail/read endpoints return 404 for inaccessible IDs. GET has no acknowledgement side effect.
+- Added migration `20261024130000_announcement_reads`: per-recipient uniqueness, cascade cleanup and composite tenant foreign keys. Applied only to the configured local development database; no schema drift remains.
+- Replaced direct database-only announcement tests with 15 API/integration tests using unique fixtures and explicit cleanup. Validated publishing role restrictions, input/CSRF checks, all seven roles, audience filters, tenant boundaries, receipts, unread counts and receipt FK integrity.
+- Fixed required compilation dependencies: CSRF session import, Prisma audit JSON input typing, and the existing Term cleanup relation filter in schema tests. Other user changes and backup files preserved.
+- Checks: focused tests pass twice; server typecheck/build and focused ESLint pass. Full server suite: 3 failed, 27 passed, 18 skipped. Auth setup/schema fixture collisions and undefined CSRF header remain; no claim of a clean full regression.
+
 ### October 23, 2026 — Relocate Prisma under server/
+
 - Moved `prisma/` and `prisma.config.ts` into `server/` (paths updated in root `tsconfig.json`, `eslint.config.js`, `.gitignore`).
 - `schema.prisma` generator `output` updated to `../src/generated/prisma`; server build/test/dev scripts now run `prisma generate` first.
 - Generated client under `server/src/generated/` is now gitignored (untracked the previously-committed files).
 - `prisma.config.ts` rewritten: datasource uses `env("DATABASE_URL")` with explicit `dotenv` load of the repo-root `.env`; removed redundant Prisma scripts and deps from root `package.json`.
 - Docs updated: `ARCHITECTURE.md` structure tree and `PROJECT.md` Prisma-location note.
-
-## Recent Notes
 
 ### October 22, 2026 — T001 complete
 
@@ -64,4 +81,9 @@ Automated tests cover: valid/invalid authentication, lifecycle expiry/revocation
 - PostgreSQL database `student_mng_dev` created and migration `20261022140237_init` applied.
 - All checks verified: typecheck (server+client), lint (ESLint root config), tests (server 1/1, client 1/1), builds (Vite client + tsc server), Prisma smoke test.
 
+### October 24, 2026 — T016: Deployment, backup recovery, and operational handoff
 
+- Created `docs/DEPLOYMENT.md` with deployment configuration, migration procedures, backup/restore processes, health check guidance, and operational handoff documentation.
+- Created `scripts/backup.sh` — automated backup script that reads DATABASE_URL from .env and creates compressed dumps.
+- Created `scripts/restore.sh` — restore script supporting both .sql and .sql.gz formats.
+- Updated `TASKS.md` — T016 status changed to DONE.

@@ -304,10 +304,26 @@ model Announcement {
   publishedAt DateTime @default(now())
   createdById String
   createdBy   User     @relation(fields: [createdById], references: [id])
+  reads       AnnouncementRead[]
   createdAt   DateTime @default(now())
 
   @@index([schoolId])
+  @@unique([id, schoolId])
   @@map("announcements")
+}
+
+model AnnouncementRead {
+  id String @id @default(uuid())
+  announcementId String
+  announcement Announcement @relation(fields: [announcementId, schoolId], references: [id, schoolId], onDelete: Cascade)
+  userId String
+  user User @relation(fields: [userId, schoolId], references: [id, schoolId], onDelete: Cascade)
+  schoolId String
+  readAt DateTime @default(now())
+
+  @@unique([announcementId, userId])
+  @@index([schoolId, userId])
+  @@map("announcementReads")
 }
 
 model AuditLog {
@@ -356,6 +372,7 @@ model User {
   firstName     String
   lastName      String
   isActive      Boolean        @default(true)
+  announcementReads AnnouncementRead[]
   payments      Payment[]
   attendances   Attendance[]
   announcements Announcement[]
@@ -365,6 +382,7 @@ model User {
   updatedAt     DateTime       @updatedAt
 
   @@index([schoolId])
+  @@unique([id, schoolId])
   @@map("users")
 }
 
