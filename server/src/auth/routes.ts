@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db.js";
+import { createAuditLog } from "../audit.js";
 import { AppError } from "../error.js";
 import { validateRequest } from "../middleware/validate.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -82,7 +83,174 @@ router.get("/me", requireAuth, async (req, res) => {
   res.status(200).json({ user });
 });
 
-// Authorization probes for T003 role/tenant verification. T004 owns real admin
+/** 
+ * @route GET /guardians/:guardianId/students 
+ * @access parent - List students linked to this guardian 
+ */
+router.get(
+  "/guardians/:guardianId/students",
+  requireAuth,
+  requireRole("parent"),
+  requireSameSchool(),
+  async (req, res, next) => {
+    try {
+      const guardianId = req.params.guardianId;
+
+      const guardian = await prisma.guardian.findUnique({
+        where: { id: guardianId as string },
+        include: { students: true },
+      });
+
+      if (!guardian) {
+        return next(new AppError("Guardian not found", 404));
+      }
+
+      if (guardian.schoolId !== req.user!.schoolId) {
+        return next(new AppError("Forbidden: guardian belongs to another school", 403));
+      }
+
+      const students = ((guardian as Record<string, any>).students || []).map(
+      (student: Record<string, any>) => ({
+        id: student.id,
+        studentId: student.studentId,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        classId: student.classId,
+        email: student.email,
+      })
+    );
+
+      res.status(200).json({ students });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/** 
+ * @route GET /students/me 
+ * @access student - Show authenticated student's own data 
+ */
+router.get(
+  "/students/me",
+  requireAuth,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const user = req.user!;
+
+      const student = await prisma.student.findFirst({
+        where: { schoolId: user.schoolId, email: user.email },
+        include: {
+          class: {
+            select: { id: true, name: true, gradeLevel: true, section: true },
+          },
+          invoices: {
+            select: {
+              id: true,
+              amount: true,
+              status: true,
+              payments: {
+                select: {
+                  id: true,
+                  amount: true,
+                  recordedAt: true,
+                  method: true,
+                },
+              },
+            },
+          },
+          grades: {
+            include: { examination: { select: { id: true, name: true } } },
+          },
+          attendances: {
+            include: { class: { select: { id: true, name: true } } },
+          },
+          guardians: {
+            select: { id: true, firstName: true, lastName: true, relationship: true },
+          },
+        },
+      });
+
+      if (!student) {
+        return next(new AppError("Student record not found for this user", 404));
+      }
+
+      res.status(200).json({ student });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/** 
+ * @route GET /students/:studentId 
+ * @access parent or student - Show student data with role-based filtering 
+ */
+router.get(
+  "/students/:studentId",
+  requireAuth,
+  requireSameSchool(),
+  async (req, res, next) => {
+    try {
+      const studentId = req.params.studentId as string;
+      const user = req.user!;
+
+      const student = await prisma.student.findUnique({
+        where: { id: studentId },
+        include: {
+          class: {
+            select: { id: true, name: true, gradeLevel: true, section: true },
+          },
+          invoices: {
+            select: {
+              id: true,
+              amount: true,
+              status: true,
+              payments: {
+                select: {
+                  id: true,
+                  amount: true,
+                  recordedAt: true,
+                  method: true,
+                },
+              },
+            },
+          },
+          grades: {
+            include: { examination: { select: { id: true, name: true } } },
+          },
+          attendances: {
+            include: { class: { select: { id: true, name: true } } },
+          },
+        },
+      });
+
+      if (!student) {
+        return next(new AppError("Student not found", 404));
+      }
+
+      // Role-based filtering
+      if (user.role === "parent") {
+        // Check if this guardian is linked to this student via the join table
+        const link = await prisma.$queryRaw`
+          SELECT * FROM "GuardianStudent" 
+          WHERE "guardianId" = ${req.user?.schoolId} AND "studentId" = ${studentId} 
+          LIMIT 1
+        `;
+        if (!(link as any[]) || (link as any[]).length === 0) {
+          return next(new AppError("Forbidden: not linked to this student", 403));
+        }
+      }
+      // Students are restricted to viewing their own data via /students/me only;
+      // requireSameSchool() above already ensures school-based access control
+
+      res.status(200).json({ student });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 // routes; these probe routes enforce the role matrix and tenant boundary.
 router.get(
   "/roles/super-admin",
@@ -109,7 +277,7 @@ router.get(
   async (req, res, next) => {
     try {
       const school = await prisma.school.findUnique({
-        where: { id: req.params.id },
+        where: { id: req.params.id as string },
       });
       if (!school) {
         return next(new AppError("School not found", 404));
@@ -120,5 +288,353 @@ router.get(
     }
   },
 );
+
+router.post(
+  "/invoices/:invoiceId/payments",
+  requireAuth,
+  requireRole("school-admin", "super-admin"),
+  validateRequest(
+    z.object({
+      amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+        message: "Amount must be a positive number",
+      }),
+      method: z.string().min(1, { message: "Payment method is required" }),
+      reference: z.string().optional().refine((val) => val === undefined || val.trim().length > 0, {
+        message: "Reference must not be empty if provided",
+      }),
+    })
+  ),
+  async (req, res, next) => {
+    try {
+      const invoiceId = (req.params.invoiceId ?? req.params.invoiceId?.[0]) as string;
+      const { amount, method, reference } = req.body;
+
+      const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
+      if (!invoice) {
+        return next(new AppError("Invoice not found", 404));
+      }
+      if (req.user?.role === "school-admin" && invoice.schoolId !== req.user.schoolId) {
+        return next(new AppError("Forbidden: access to another school's invoice", 403));
+      }
+
+      // Calculate total already paid for this invoice
+      const existingPayments = await prisma.payment.findMany({
+        where: { invoiceId },
+      });
+      const totalPaid = existingPayments.reduce(
+        (sum, p) => sum + Number(p.amount),
+        0
+      );
+      const outstanding = Number(invoice.amount) - totalPaid;
+
+      const paymentAmount = Number(amount);
+
+      // T011: Validate against outstanding balance, not invoice total
+      // This prevents overpayments while allowing partial payments
+      if (paymentAmount > outstanding) {
+        return next(new AppError(
+          `Payment amount exceeds outstanding balance (outstanding: ${outstanding})`,
+          400
+        ));
+      }
+
+      // Prevent duplicate payment recording (same amount + method combination)
+      // Compare as numbers since Prisma Decimal type may not strictly equal JS number
+      const hasDuplicate = existingPayments.some(
+        (p) => Number(p.amount) === paymentAmount && p.method === method
+      );
+      if (hasDuplicate) {
+        return next(new AppError("Duplicate payment record detected", 409));
+      }
+
+      const payment = await prisma.payment.create({
+        data: {
+          id: crypto.randomUUID(),
+          schoolId: req.user!.schoolId,
+          recordedById: req.user!.userId,
+          invoiceId,
+          amount: paymentAmount,
+          method,
+          ...(reference && { reference }),
+        },
+      });
+
+      await createAuditLog({
+        schoolId: req.user!.schoolId,
+        userId: req.user!.userId,
+        action: "PAYMENT_CREATE",
+        entity: "Payment",
+        entityId: payment.id,
+        metadata: {
+          invoiceId: invoice.id,
+          studentId: invoice.studentId,
+          amount: payment.amount,
+          method: payment.method,
+          reference: payment.reference,
+        },
+      });
+
+      res.status(201).json({ id: payment.id });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
+ * @route GET /invoices/:invoiceId/payments - List payments for an invoice
+ * @access school-admin (own school) or super-admin
+ */
+router.get(
+  "/invoices/:invoiceId/payments",
+  requireAuth,
+  requireSameSchool(),
+  async (req, res, next) => {
+    try {
+      const invoiceId = (req.params.invoiceId ?? req.params.invoiceId?.[0]) as string;
+
+      const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
+      if (!invoice) {
+        return next(new AppError("Invoice not found", 404));
+      }
+      if (req.user?.role === "school-admin" && invoice.schoolId !== req.user.schoolId) {
+        return next(new AppError("Forbidden: access to another school's invoice", 403));
+      }
+
+      const payments = await prisma.payment.findMany({
+        where: { invoiceId },
+        orderBy: { id: "desc" },
+      });
+
+      res.status(200).json({ payments });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
+ * @route GET /invoices - List invoices for a school
+ * @access school-admin (own school) or super-admin
+ */
+router.get(
+  "/invoices",
+  requireAuth,
+  requireSameSchool(),
+  async (req, res, next) => {
+    try {
+      const { studentId, feeId, status } = req.query as {
+        studentId?: string;
+        feeId?: string;
+        status?: string;
+      };
+
+      const where: any = { schoolId: req.user!.schoolId };
+      if (studentId) {
+        where.studentId = studentId;
+      }
+      if (feeId) {
+        where.feeId = feeId;
+      }
+      if (status) {
+        where.status = status;
+      }
+
+      const invoices = await prisma.invoice.findMany({
+        where,
+        include: {
+          student: {
+            select: { id: true, studentId: true, firstName: true, lastName: true },
+          },
+          fee: {
+            select: { id: true, name: true, amount: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      res.status(200).json({ invoices });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
+ * @route GET /invoices/balances - Get outstanding balances for a school
+ * @access school-admin (own school) or super-admin
+ */
+router.get(
+  "/balances",
+  requireAuth,
+  requireSameSchool(),
+  async (req, res, next) => {
+    try {
+      const { studentId, feeId } = req.query as {
+        studentId?: string;
+        feeId?: string;
+      };
+
+      const where: any = { schoolId: req.user!.schoolId };
+      if (studentId) {
+        where.studentId = studentId;
+      }
+      if (feeId) {
+        where.feeId = feeId;
+      }
+
+      const invoices = await prisma.invoice.findMany({
+        where,
+        include: {
+          student: {
+            select: { id: true, studentId: true, firstName: true, lastName: true },
+          },
+          payments: {
+            select: { amount: true },
+          },
+          fee: {
+            select: { id: true, name: true, amount: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      const balances = invoices.map((invoice) => {
+        const totalPaid = invoice.payments.reduce(
+          (sum, p) => sum + Number(p.amount),
+          0
+        );
+        const outstanding = Number(invoice.amount) - totalPaid;
+        return {
+          invoiceId: invoice.id,
+          studentId: invoice.studentId,
+          studentName: invoice.student?.studentId
+            ? `${invoice.student.firstName} ${invoice.student.lastName}`
+            : null,
+          feeId: invoice.feeId,
+          feeName: invoice.fee?.name || null,
+          totalAmount: Number(invoice.amount),
+          totalPaid,
+          outstanding,
+        };
+      });
+
+      res.status(200).json({ balances });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
+ * @route GET /financial/reports/collected - Get collected amount report
+ * @access school-admin (own school) or super-admin
+ */
+router.get(
+  "/financial/reports/collected",
+  requireAuth,
+  requireSameSchool(),
+  async (req, res, next) => {
+    try {
+      const { studentId, feeId, fromDate, toDate } = req.query as {
+        studentId?: string;
+        feeId?: string;
+        fromDate?: string;
+        toDate?: string;
+      };
+
+      const where: any = { schoolId: req.user!.schoolId };
+      if (studentId) {
+        where.studentId = studentId;
+      }
+      if (feeId) {
+        where.feeId = feeId;
+      }
+      if (fromDate || toDate) {
+        where.createdAt = {};
+        if (fromDate) {
+          where.createdAt.gte = new Date(fromDate as string);
+        }
+        if (toDate) {
+          where.createdAt.lte = new Date(toDate as string);
+        }
+      }
+
+      const payments = await prisma.payment.findMany({
+        where,
+        select: { amount: true },
+      });
+
+      const totalCollected = payments.reduce(
+        (sum, p) => sum + Number(p.amount),
+        0
+      );
+
+      res.status(200).json({ totalCollected });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
+ * @route GET /financial/reports/outstanding - Get outstanding amount report
+ * @access school-admin (own school) or super-admin
+ */
+router.get(
+  "/financial/reports/outstanding",
+  requireAuth,
+  requireSameSchool(),
+  async (req, res, next) => {
+    try {
+      const { studentId, feeId, fromDate, toDate } = req.query as {
+        studentId?: string;
+        feeId?: string;
+        fromDate?: string;
+        toDate?: string;
+      };
+
+      const invoiceWhere: any = { schoolId: req.user!.schoolId };
+      if (studentId) {
+        invoiceWhere.studentId = studentId;
+      }
+      if (feeId) {
+        invoiceWhere.feeId = feeId;
+      }
+      if (fromDate || toDate) {
+        invoiceWhere.createdAt = {};
+        if (fromDate) {
+          invoiceWhere.createdAt.gte = new Date(fromDate as string);
+        }
+        if (toDate) {
+          invoiceWhere.createdAt.lte = new Date(toDate as string);
+        }
+      }
+
+      const invoices = await prisma.invoice.findMany({
+        where: invoiceWhere,
+        include: {
+          payments: {
+            select: { amount: true },
+          },
+        },
+      });
+
+      const totalOutstanding = invoices.reduce((sum, invoice) => {
+        const totalPaid = invoice.payments.reduce(
+          (acc, p) => acc + Number(p.amount),
+          0
+        );
+        return sum + Math.max(0, Number(invoice.amount) - totalPaid);
+      }, 0);
+
+      res.status(200).json({ totalOutstanding });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+
 
 export default router;

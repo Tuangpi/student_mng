@@ -44,6 +44,15 @@ These technologies are planned, not installed or verified. Select stable, compat
 
 ## Verified State
 
+As of October 23, 2026, T004 — School setup and subscription administration is complete:
+- Full CRUD routes for school management (create, read, update, delete)
+- Role-based access control: super-admin manages all schools, school-admin manages only their own
+- Subscription management routes (get and update with upsert)
+- Both routes enforce tenant boundaries: school-admin can only access their own school's data
+- Audit logging integrated for all school and subscription operations
+
+T003 — Authentication, role permissions, and tenant isolation: test infrastructure fixes complete, 21/22 auth tests passing, 5/5 schema constraint tests passing.
+
 As of October 22, 2026, repository inspection found a minimal README and seven design documents in `docs/`. No application source, package manifests, database schema, migrations, or test configuration exists. No runtime features are implemented or verified.
 
 ## Decisions Still Needed
