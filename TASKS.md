@@ -98,7 +98,20 @@ Implementation completed:
 - Dependencies: T014 (DONE)
 - Expected result: Full regression and multi-tenant security coverage, reviewed privacy/authorization behavior, and performance improvements against agreed criteria. Resolve identified release-blocking defects.
 - Completion check: Run builds, typechecks, full test suite (server 1/1, client 1/1), multi-school authorization tests, and documented security/performance checks. Record evidence and unresolved issues; do not mark DONE with release blockers.
-- Notes: T014 localization is complete. T015 focused on security hardening, expanded regression coverage building on the 21/22 passing auth tests and 5/5 schema tests, and performance review. Known issues: 1 auth test failure is test-isolation issue with audit logging (not a code bug), JSDOM client test environment issue is unrelated to functionality. Infrastructure import path fixes completed; test cleanup functions updated.
+- Evidence (October 24, 2026):
+  - Full server suite: 47/47 passed, 6 files, no skips (two consecutive runs).
+  - Full client suite: 1/1 passed.
+  - Server typecheck, production build, focused ESLint: pass.
+  - Client typecheck, production build, ESLint: pass.
+  - Multi-school authorization: covered by server auth tests (cross-school access denied for teacher/school-admin boundaries; super-admin bypass works).
+- Security fixes applied this session:
+  - Added missing `requireAuth` to `/api/roles/super-admin` and `/api/roles/school-admin` (production auth gap).
+  - Fixed test fixture isolation: unique per-run school codes/emails, deterministic teardown in FK-safe order, no swallowed cleanup errors.
+  - Fixed cookie parsing: extract named cookie across all Set-Cookie headers; per-test Supertest agents retain cookies only within a test.
+  - Independent audit fixtures; added CSRF mismatch, role-probe auth, revoked-session replay, and cleared-cookie assertions.
+- Security review (documented): helmet + CORS on all responses; requireAuth on every protected route; requireRole + requireSameSchool on privileged/tenant-scoped routes; CSRF validation on signout and announcement write/read; HttpOnly session cookies with Secure in production; SHA-256-hashed session tokens; bcrypt password hashing (12 rounds); error middleware hides stack traces for unexpected errors; GET /health returns ok.
+- Performance evidence: client production bundle 222.68 kB (69.57 kB gzipped); server is minimal Express + Prisma with no heavy runtime dependencies. No measured performance criteria exist in PROJECT.md or docs — recommended next step is to agree measurable low-bandwidth/response-time targets before release.
+- Dependency note: T016 is marked DONE but lists T015 as a dependency. T016 should be reviewed before release since it was completed while T015 was IN PROGRESS.
 
 ### T016 — Deployment, backup recovery, and operational handoff
 - Status: DONE

@@ -255,6 +255,7 @@ router.get(
 // routes; these probe routes enforce the role matrix and tenant boundary.
 router.get(
   "/roles/super-admin",
+  requireAuth,
   requireRole("super-admin"),
   async (req, res) => {
     res.status(200).json({ ok: true, role: req.user!.role });
@@ -263,6 +264,7 @@ router.get(
 
 router.get(
   "/roles/school-admin",
+  requireAuth,
   requireRole("school-admin"),
   async (req, res) => {
     res.status(200).json({ ok: true, role: req.user!.role });
