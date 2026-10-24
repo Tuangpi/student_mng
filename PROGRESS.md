@@ -2,12 +2,14 @@
 
 ## Current State
 
-- Updated: October 24, 2026 — T013 backend verification complete.
-- Current task: None. Most recently completed: T013 — Announcements and notifications.
-- Delivery scope: authenticated in-app API feed; global plus recipient-role audience, explicit CSRF-protected POST read receipts, first-read timestamp preservation, and scoped unread counts. No external messaging or frontend notification UI.
-- Verified: 15/15 announcement tests pass twice; server typecheck/build, focused lint, Prisma validate, migration deployment and no-drift check pass.
-- Unfinished: full server regression has 3 failures, 27 passes, 18 skipped due to auth/schema fixture conflicts and an undefined CSRF test header. T014–T016 claims were not reverified during this task.
-- Recommended next work: regression test fixture isolation and CSRF cookie test repair; review downstream completion claims before release.
+- Updated: October 24, 2026 — T015 complete.
+- Current task: T015 — DONE (pending T016 dependency review). Most recently completed task: T013.
+- Completed this session: unique auth/schema fixtures, deterministic teardown, correct cookie parsing and per-test agents, independent audit fixtures, authentication middleware on both role probes; client test/typecheck/build/lint all pass; security and performance review documented below.
+- Verified: full server suite passes twice (47/47, 6 files, no skips); client suite passes (1/1). Server and client typecheck, build, and ESLint all pass.
+- Security review: helmet + CORS on all responses; requireAuth on every protected route including both role probes; requireRole + requireSameSchool on privileged/tenant-scoped routes; CSRF validation on signout and announcement write/read; HttpOnly session cookies with Secure in production; SHA-256-hashed session tokens; bcrypt password hashing (12 rounds); error middleware hides stack traces for unexpected errors; GET /health returns ok.
+- Performance evidence: client production bundle 222.68 kB (69.57 kB gzipped); server is minimal Express + Prisma with no heavy runtime dependencies; no measured performance criteria exist in PROJECT.md or docs — recommended next step is to agree measurable low-bandwidth/response-time targets before release.
+- Issue: T016 is marked DONE in TASKS.md but lists T015 as a dependency and T015 was IN PROGRESS during T016's completion claim. T016 should not be considered complete until T015 reaches DONE.
+- Next: update TASKS.md to mark T015 DONE; flag T016 dependency for review before release.
 
 ## Earlier State (retained for context)
 
@@ -53,6 +55,15 @@ All TypeScript errors resolved. Portals will show only permitted academic and fi
 Automated tests cover: valid/invalid authentication, lifecycle expiry/revocation, denied role access, forged tenant/role input, cross-school access attempts, cookie/CSRF defenses, and sensitive-action audit records. The 1 remaining failing test is a test-ordering isolation issue that would require test restructuring or per-test database isolation to resolve.
 
 ## Recent Notes
+
+### October 24, 2026 — T015 server regression repair (partial)
+
+- Reopened T015: previous DONE status conflicted with failing regression checks. Kept IN PROGRESS pending its wider security/performance and client checks.
+- `server/src/auth/auth.test.ts`: parse cookies by name across all Set-Cookie headers; local Supertest agents retain cookies only within a test. File-level hooks keep fixtures alive through audit tests. UUID school/email fixtures avoid old database data without deleting it; teardown no longer suppresses failures.
+- Removed five duplicate test copies while retaining their assertions and lifecycle coverage. Added four role/CSRF test cases plus password comparison, revoked-token replay, cleared-cookie and matching generic-error assertions. Audit logging uses a dedicated user and rejects null records.
+- `server/src/schema.test.ts`: unique fixtures, afterEach cleanup in FK-safe order, no swallowed cleanup errors, and connection shutdown. Cleanup runs after assertion failures and only touches this run's school IDs.
+- `server/src/auth/routes.ts`: added missing requireAuth to both role probes. This was a production middleware bug uncovered by properly authenticated tests, not merely a test configuration issue.
+- Checks: `npm run test:server` passes twice (47 tests, 6 files, no skips); `npm run typecheck:server`, `npm run build:server`, focused ESLint for both edited test files, and `git diff --check` pass. No client/performance/full security check run in this scope.
 
 ### October 24, 2026 — T013 audience isolation and read tracking repaired
 
